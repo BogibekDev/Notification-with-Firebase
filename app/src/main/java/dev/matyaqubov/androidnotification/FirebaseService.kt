@@ -3,12 +3,16 @@ package dev.matyaqubov.androidnotification
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.NotificationManager.IMPORTANCE_HIGH
+import android.app.PendingIntent
+import android.app.PendingIntent.FLAG_ONE_SHOT
 import android.content.Context
+import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Color
 import android.media.Ringtone
 import android.media.RingtoneManager
+import android.net.Uri
 import android.os.Build
 import android.util.Log
 import androidx.annotation.RequiresApi
@@ -23,9 +27,33 @@ import kotlin.random.Random
 const val CHANNEL_ID = "my_channel"
 
 class FirebaseService : FirebaseMessagingService() {
+    lateinit var intent: Intent
     override fun onMessageReceived(message: RemoteMessage) {
         super.onMessageReceived(message)
 
+        val type = message.data["type"]
+
+        when (type) {
+            "parcel" -> {
+                intent = Intent(this, MainActivity::class.java).also {
+                    it.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP)
+                    it.putExtra("type", "parcel")
+                }
+            }
+            "update" -> {
+                intent = Intent(Intent.ACTION_VIEW).also {
+                    it.data =
+                        Uri.parse("https://play.google.com/store/apps/details?id=ic0der.justwater")
+                    it.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK)
+                }
+            }
+            else ->{
+
+            }
+        }
+
+        var requestCode = (0..10).random()
+        val pendingIntent = PendingIntent.getActivity(this, requestCode, intent, FLAG_ONE_SHOT)
         val notification = NotificationCompat.Builder(this, CHANNEL_ID)
             .setContentTitle(message.data["title"])
             .setContentText(message.data["body"])
@@ -33,6 +61,7 @@ class FirebaseService : FirebaseMessagingService() {
             .setLargeIcon(BitmapFactory.decodeResource(resources, R.drawable.img))
             .setSound(RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION))
             .setPriority(NotificationCompat.PRIORITY_HIGH)
+            .setContentIntent(pendingIntent)
             .setAutoCancel(true)
             .setStyle(
                 if (message.data["image"].isNullOrEmpty()) {

@@ -9,13 +9,31 @@ import android.content.ComponentName
 
 import android.content.Intent
 import android.os.Build
+import android.widget.TextView
+import android.widget.Toast
+import com.google.firebase.analytics.FirebaseAnalytics
+import com.google.firebase.crashlytics.FirebaseCrashlytics
+import com.google.firebase.ktx.Firebase
+import com.google.firebase.messaging.ktx.messaging
 
 
 class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+//        FirebaseAnalytics.getInstance(this)
+        FirebaseCrashlytics.getInstance()
         loadFCMToken()
+        Firebase.messaging.subscribeToTopic("all").addOnCompleteListener { task ->
+            Log.e("AAA", "subscribe:${task.isSuccessful} ")
+        }
+
+        Firebase.messaging.subscribeToTopic("user").addOnCompleteListener { task ->
+            Log.e("AAA", "subscribe:${task.isSuccessful} ")
+        }
+        findViewById<TextView>(R.id.tv_add).setOnClickListener {
+            Toast.makeText(this, "${5/0}", Toast.LENGTH_SHORT).show()
+        }
         forxiaomi()
     }
 
@@ -30,6 +48,27 @@ class MainActivity : AppCompatActivity() {
             )
             startActivity(intent)
         }
+    }
+
+    private fun navigate(intent: Intent?) {
+        if (intent != null) {
+            val text = intent.getStringExtra("type")
+            when (text) {
+                "parcel" -> {
+                    //navigate to fragment
+                    Toast.makeText(this, "Navigate to parcel Fragment", Toast.LENGTH_SHORT).show()
+                }
+                "simple" -> {
+                    //navigate to fragment
+                    Toast.makeText(this, "Navigate to parcel Fragment", Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
+    }
+
+    override fun onNewIntent(intent: Intent?) {
+        super.onNewIntent(intent)
+        navigate(intent)
     }
 
     private fun loadFCMToken() {
